@@ -1,9 +1,5 @@
-use std::{error::Error, result, vec};
+use std::{error::Error, vec};
 use calamine::{RangeDeserializerBuilder, Reader, Xlsx, open_workbook, DataType};
-use serde::{Deserialize, Serialize};
-
-
-const COLUMNS: [&str; 3] = ["date", "description", "amount"];
 
 pub struct Config {
     pub file_path: String
@@ -30,7 +26,7 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 }
 
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug)]
 struct Transaction {
     date: String,
     description: String,
