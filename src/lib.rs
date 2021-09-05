@@ -1,4 +1,5 @@
-use std::{error::Error, vec};
+use std::{collections::HashMap, error::Error, vec};
+use std::collections::hash_map::Entry::{Occupied, Vacant};
 use calamine::{RangeDeserializerBuilder, Reader, Xlsx, open_workbook, DataType};
 
 pub struct Config {
@@ -17,10 +18,20 @@ impl Config {
 }
 
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
-    println!("Given path: {}", config.file_path);
-
     let parsed_rows = parse_workbook(&config)?;
-    println!("{:?}", parsed_rows);
+
+    let mut category_groups: HashMap<String, f64> = HashMap::new();
+    for row in parsed_rows {
+
+        let value = match category_groups.entry(row.category) {
+            Vacant(entry) => entry.insert(0.0),
+            Occupied(entry) => entry.into_mut(),
+        };
+        
+        *value += row.amount;
+    }
+
+    category_groups.iter().for_each(|f| println!("{}, {}", f.0, f.1));
 
     Ok(())
 }
