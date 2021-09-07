@@ -20,18 +20,31 @@ impl Config {
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let parsed_rows = parse_workbook(&config)?;
 
-    let mut category_groups: HashMap<String, f64> = HashMap::new();
+    let mut expenses_grouped: HashMap<String, f64> = HashMap::new();
+    let mut income_grouped: HashMap<String, f64> = HashMap::new();
+    
     for row in parsed_rows {
+        if row.amount > 0.0 {
+            let value = match income_grouped.entry(row.category) {
+                Vacant(entry) => entry.insert(0.0),
+                Occupied(entry) => entry.into_mut(),
+            };
+            *value += row.amount;
 
-        let value = match category_groups.entry(row.category) {
-            Vacant(entry) => entry.insert(0.0),
-            Occupied(entry) => entry.into_mut(),
-        };
-        
-        *value += row.amount;
+        } else {
+            let value = match expenses_grouped.entry(row.category) {
+                Vacant(entry) => entry.insert(0.0),
+                Occupied(entry) => entry.into_mut(),
+            };
+            *value += row.amount;
+        }
     }
 
-    category_groups.iter().for_each(|f| println!("{}, {}", f.0, f.1));
+
+    println!("Income: ");
+    income_grouped.iter().for_each(|f| println!("{}, {}", f.0, f.1));
+    println!("\n Expenses: ");
+    expenses_grouped.iter().for_each(|f| println!("{}, {}", f.0, f.1));
 
     Ok(())
 }
