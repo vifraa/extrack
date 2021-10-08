@@ -24,11 +24,8 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let summary = calculate_summary(parsed_rows);
 
 
-    println!("\nCategories total: ");
-    summary.category_breakdown.iter().for_each(|f| println!("{}: {}", f.0, f.1));
-    println!("\nTotal result: {}", summary.total);
-
-    println!("{}", json!(summary).to_string());
+    // TODO should fix the unwrap
+    println!("{}", serde_json::to_string_pretty(&summary).unwrap());
 
     Ok(())
 }
