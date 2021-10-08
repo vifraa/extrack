@@ -1,7 +1,6 @@
 use std::{collections::HashMap, error::Error, vec};
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use calamine::{RangeDeserializerBuilder, Reader, Xlsx, open_workbook, DataType};
-use serde_json::json;
 use serde::{Serialize, Deserialize};
 
 pub struct Config {
@@ -44,9 +43,19 @@ fn calculate_summary(transactions: Vec<Transaction>) -> Summary {
         total += transaction.amount;
     }
 
+    let mut expenses = 0.0;
+    let mut income = 0.0;
+    category_grouped.iter().for_each(|f| {
+        if f.1 > &0.0 {
+            income += f.1;
+        } else {
+            expenses += f.1;
+        }
+    });
+
     Summary{
-        income: 0.0,
-        expenses: 0.0,
+        income,
+        expenses,
         total,
         category_breakdown: category_grouped
     }
