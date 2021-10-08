@@ -1,6 +1,8 @@
 use std::{collections::HashMap, error::Error, vec};
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use calamine::{RangeDeserializerBuilder, Reader, Xlsx, open_workbook, DataType};
+use serde_json::json;
+use serde::{Serialize, Deserialize};
 
 pub struct Config {
     pub file_path: String
@@ -25,6 +27,8 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     println!("\nCategories total: ");
     summary.category_breakdown.iter().for_each(|f| println!("{}: {}", f.0, f.1));
     println!("\nTotal result: {}", summary.total);
+
+    println!("{}", json!(summary).to_string());
 
     Ok(())
 }
@@ -53,7 +57,7 @@ fn calculate_summary(transactions: Vec<Transaction>) -> Summary {
 
 
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 struct Summary {
     income: f64,
     expenses: f64,
