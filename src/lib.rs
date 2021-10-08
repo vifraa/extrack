@@ -43,8 +43,14 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 
     println!("Income: ");
     income_grouped.iter().for_each(|f| println!("{}, {}", f.0, f.1));
-    println!("\n Expenses: ");
+    println!("\nExpenses: ");
     expenses_grouped.iter().for_each(|f| println!("{}, {}", f.0, f.1));
+
+
+    let mut total = 0.0;
+    income_grouped.iter().for_each(|f| total += f.1 );
+    expenses_grouped.iter().for_each(|f| total += f.1);
+    println!("\n\n\nTotal result: {}", total);
 
     Ok(())
 }
