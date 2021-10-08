@@ -22,8 +22,18 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 
     let mut expenses_grouped: HashMap<String, f64> = HashMap::new();
     let mut income_grouped: HashMap<String, f64> = HashMap::new();
+    let mut together_grouped: HashMap<String, f64> = HashMap::new();
     
     for row in parsed_rows {
+        // Clone sucks. Did this fast just to get some values. Definitely need to refactor
+        // everything in this method.
+        let value = match together_grouped.entry(row.category.clone()) {
+            Vacant(entry) => entry.insert(0.0),
+            Occupied(entry) => entry.into_mut(),
+        };
+        *value += row.amount;
+
+        
         if row.amount > 0.0 {
             let value = match income_grouped.entry(row.category) {
                 Vacant(entry) => entry.insert(0.0),
@@ -42,15 +52,19 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 
 
     println!("Income: ");
-    income_grouped.iter().for_each(|f| println!("{}, {}", f.0, f.1));
+    income_grouped.iter().for_each(|f| println!("{}: {}", f.0, f.1));
     println!("\nExpenses: ");
-    expenses_grouped.iter().for_each(|f| println!("{}, {}", f.0, f.1));
+    expenses_grouped.iter().for_each(|f| println!("{}: {}", f.0, f.1));
 
 
     let mut total = 0.0;
     income_grouped.iter().for_each(|f| total += f.1 );
     expenses_grouped.iter().for_each(|f| total += f.1);
     println!("\n\n\nTotal result: {}", total);
+
+    println!("\nCategories total: ");
+    together_grouped.iter().for_each(|f| println!("{}: {}", f.0, f.1));
+
 
     Ok(())
 }
