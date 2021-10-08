@@ -19,56 +19,47 @@ impl Config {
 
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let parsed_rows = parse_workbook(&config)?;
+    let summary = calculate_summary(parsed_rows);
 
-    let mut expenses_grouped: HashMap<String, f64> = HashMap::new();
-    let mut income_grouped: HashMap<String, f64> = HashMap::new();
-    let mut together_grouped: HashMap<String, f64> = HashMap::new();
-    
-    for row in parsed_rows {
-        // Clone sucks. Did this fast just to get some values. Definitely need to refactor
-        // everything in this method.
-        let value = match together_grouped.entry(row.category.clone()) {
-            Vacant(entry) => entry.insert(0.0),
-            Occupied(entry) => entry.into_mut(),
-        };
-        *value += row.amount;
-
-        
-        if row.amount > 0.0 {
-            let value = match income_grouped.entry(row.category) {
-                Vacant(entry) => entry.insert(0.0),
-                Occupied(entry) => entry.into_mut(),
-            };
-            *value += row.amount;
-
-        } else {
-            let value = match expenses_grouped.entry(row.category) {
-                Vacant(entry) => entry.insert(0.0),
-                Occupied(entry) => entry.into_mut(),
-            };
-            *value += row.amount;
-        }
-    }
-
-
-    println!("Income: ");
-    income_grouped.iter().for_each(|f| println!("{}: {}", f.0, f.1));
-    println!("\nExpenses: ");
-    expenses_grouped.iter().for_each(|f| println!("{}: {}", f.0, f.1));
-
-
-    let mut total = 0.0;
-    income_grouped.iter().for_each(|f| total += f.1 );
-    expenses_grouped.iter().for_each(|f| total += f.1);
-    println!("\n\n\nTotal result: {}", total);
 
     println!("\nCategories total: ");
-    together_grouped.iter().for_each(|f| println!("{}: {}", f.0, f.1));
-
+    summary.category_breakdown.iter().for_each(|f| println!("{}: {}", f.0, f.1));
+    println!("\nTotal result: {}", summary.total);
 
     Ok(())
 }
 
+
+fn calculate_summary(transactions: Vec<Transaction>) -> Summary {
+    
+    let mut total = 0.0;
+    let mut category_grouped: HashMap<String, f64> = HashMap::new();
+    for transaction in transactions {
+        let value = match category_grouped.entry(transaction.category) {
+            Occupied(entry) => entry.into_mut(),
+            Vacant(entry) => entry.insert(0.0),
+        };
+        *value += transaction.amount;
+        total += transaction.amount;
+    }
+
+    Summary{
+        income: 0.0,
+        expenses: 0.0,
+        total,
+        category_breakdown: category_grouped
+    }
+}
+
+
+
+#[derive(Debug)]
+struct Summary {
+    income: f64,
+    expenses: f64,
+    total: f64,
+    category_breakdown: HashMap<String, f64> 
+}
 
 #[derive(Debug)]
 struct Transaction {
