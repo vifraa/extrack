@@ -97,12 +97,12 @@ struct Transaction {
 }
 
 impl Transaction {
-    fn parse_from_excel_row(row: Vec<DataType>) -> Result<Transaction, String> {
+    fn parse_from_excel_row(row: Vec<DataType>, config: &Config) -> Result<Transaction, String> {
         let transaction = Transaction {
-            date: row[1].to_string(),
-            description: row[2].to_string(),
-            amount: row[3].get_float().unwrap_or(0.0),
-            category: row[5].get_string().unwrap_or("Unspecified").to_string()
+            date: row[config.date_column].to_string(),
+            description: row[config.description_column].to_string(),
+            amount: row[config.amount_column].get_float().unwrap_or(0.0),
+            category: row[config.category_column].get_string().unwrap_or("Unspecified").to_string()
         };
 
         if transaction.amount == 0.0 {
@@ -130,7 +130,7 @@ fn parse_workbook(config: &Config) -> Result<Vec<Transaction>, Box<dyn Error>> {
     while let Some(r) = iter_result.next() {
         let row: Vec<DataType> = r?;
         
-        let transaction = Transaction::parse_from_excel_row(row);
+        let transaction = Transaction::parse_from_excel_row(row, config);
         match transaction {
             Ok(t) => result.push(t),
             Err(t) => println!("{}", t)
