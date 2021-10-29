@@ -2,9 +2,14 @@ use std::{collections::HashMap, error::Error, vec};
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use calamine::{RangeDeserializerBuilder, Reader, Xlsx, open_workbook, DataType};
 use serde::{Serialize, Deserialize};
+use std::env;
 
 pub struct Config {
-    pub file_path: String
+    pub file_path: String,
+    pub date_column: usize,
+    pub description_column: usize,
+    pub amount_column: usize,
+    pub category_column: usize
 }
 
 impl Config {
@@ -14,7 +19,19 @@ impl Config {
         }
 
         let file_path = args[1].clone();
-        Ok(Config { file_path })
+
+        let date_column: usize = env::var("EXTRACK_DATE_COLUMN").unwrap_or(String::from("0")).parse().unwrap_or(0);
+        let description_column: usize = env::var("EXTRACK_DESCRIPTION_COLUMN").unwrap_or(String::from("1")).parse().unwrap_or(1);
+        let amount_column: usize = env::var("EXTRACK_AMOUNT_COLUMN").unwrap_or(String::from("2")).parse().unwrap_or(2);
+        let category_column: usize = env::var("EXTRACK_CATEGORY_COLUMN").unwrap_or(String::from("3")).parse().unwrap_or(3);
+        
+        Ok(Config { 
+            file_path, 
+            date_column,
+            description_column,
+            amount_column,
+            category_column,
+        })
     }
 }
 
@@ -80,12 +97,12 @@ struct Transaction {
 }
 
 impl Transaction {
-    fn parse_from_excel_row(row: Vec<DataType>) -> Result<Transaction, String> {
+    fn parse_from_excel_row(row: Vec<DataType>, config: &Config) -> Result<Transaction, String> {
         let transaction = Transaction {
-            date: row[1].to_string(),
-            description: row[2].to_string(),
-            amount: row[3].get_float().unwrap_or(0.0),
-            category: row[5].get_string().unwrap_or("Unspecified").to_string()
+            date: row[config.date_column].to_string(),
+            description: row[config.description_column].to_string(),
+            amount: row[config.amount_column].get_float().unwrap_or(0.0),
+            category: row[config.category_column].get_string().unwrap_or("Unspecified").to_string()
         };
 
         if transaction.amount == 0.0 {
@@ -113,7 +130,7 @@ fn parse_workbook(config: &Config) -> Result<Vec<Transaction>, Box<dyn Error>> {
     while let Some(r) = iter_result.next() {
         let row: Vec<DataType> = r?;
         
-        let transaction = Transaction::parse_from_excel_row(row);
+        let transaction = Transaction::parse_from_excel_row(row, config);
         match transaction {
             Ok(t) => result.push(t),
             Err(t) => println!("{}", t)
