@@ -9,7 +9,8 @@ pub struct Config {
     pub date_column: usize,
     pub description_column: usize,
     pub amount_column: usize,
-    pub category_column: usize
+    pub category_column: usize,
+    pub first_row_index: usize,
 }
 
 impl Config {
@@ -24,13 +25,16 @@ impl Config {
         let description_column: usize = env::var("EXTRACK_DESCRIPTION_COLUMN").unwrap_or(String::from("1")).parse().unwrap_or(1);
         let amount_column: usize = env::var("EXTRACK_AMOUNT_COLUMN").unwrap_or(String::from("2")).parse().unwrap_or(2);
         let category_column: usize = env::var("EXTRACK_CATEGORY_COLUMN").unwrap_or(String::from("3")).parse().unwrap_or(3);
-        
+
+        let first_row_index: usize = env::var("EXTRACK_FIRST_ROW_INDEX").unwrap_or(String::from("0")).parse().unwrap_or(0);
+
         Ok(Config { 
             file_path, 
             date_column,
             description_column,
             amount_column,
             category_column,
+            first_row_index
         })
     }
 }
@@ -126,7 +130,7 @@ fn parse_workbook(config: &Config) -> Result<Vec<Transaction>, Box<dyn Error>> {
 
 
     let mut result = vec![];
-    let mut iter_result = RangeDeserializerBuilder::new().from_range(&range.1)?;
+    let mut iter_result = RangeDeserializerBuilder::new().from_range(&range.1)?.skip(config.first_row_index);
     while let Some(r) = iter_result.next() {
         let row: Vec<DataType> = r?;
         
