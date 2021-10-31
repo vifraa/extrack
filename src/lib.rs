@@ -27,7 +27,7 @@ impl Config {
         let category_column: usize = env::var("EXTRACK_CATEGORY_COLUMN").unwrap_or(String::from("3")).parse().unwrap_or(3);
 
         let first_row_index: usize = env::var("EXTRACK_FIRST_ROW_INDEX").unwrap_or(String::from("0")).parse().unwrap_or(0);
-        
+
         Ok(Config { 
             file_path, 
             date_column,
@@ -130,7 +130,7 @@ fn parse_workbook(config: &Config) -> Result<Vec<Transaction>, Box<dyn Error>> {
 
 
     let mut result = vec![];
-    let mut iter_result = RangeDeserializerBuilder::new().from_range(&range.1)?;
+    let mut iter_result = RangeDeserializerBuilder::new().from_range(&range.1)?.skip(config.first_row_index);
     while let Some(r) = iter_result.next() {
         let row: Vec<DataType> = r?;
         
