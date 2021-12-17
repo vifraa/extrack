@@ -1,10 +1,22 @@
-use std::env;
 use std::process;
 
+use clap::App;
+use clap::Arg;
 use extrack::Config;
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
+    let args = App::new("Extrack")
+        .author("Viktor Franzén, <viktor@frnzn.com>")
+        .about("Extracting information from your expenses")
+        .arg(
+            Arg::new("output")
+                .short('o')
+                .long("output")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::new("input")
+        ).get_matches();
 
     let config = Config::new(&args).unwrap_or_else(|err| {
         println!("Problem parsing arguments: {}", err);
@@ -15,7 +27,4 @@ fn main() {
         println!("Application error: {}", e);
         process::exit(1);
     }
-
 }
-
-

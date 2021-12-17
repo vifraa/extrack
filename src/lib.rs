@@ -1,6 +1,7 @@
 use std::{collections::HashMap, error::Error, vec};
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use calamine::{RangeDeserializerBuilder, Reader, Xlsx, open_workbook, DataType};
+use clap::ArgMatches;
 use serde::{Serialize, Deserialize};
 use std::env;
 
@@ -14,12 +15,9 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new(args: &[String]) -> Result<Config, &str> {
-        if args.len() < 2 {
-            return Err("not enough arguments");
-        }
-
-        let file_path = args[1].clone();
+    pub fn new(args: &ArgMatches) -> Result<Config, &str> {
+        // TODO fix all of these unwraps, should handle in a good way with the Result return type.
+        let file_path = args.value_of("input").unwrap();
 
         let date_column: usize = env::var("EXTRACK_DATE_COLUMN").unwrap_or(String::from("0")).parse().unwrap_or(0);
         let description_column: usize = env::var("EXTRACK_DESCRIPTION_COLUMN").unwrap_or(String::from("1")).parse().unwrap_or(1);
@@ -29,7 +27,7 @@ impl Config {
         let first_row_index: usize = env::var("EXTRACK_FIRST_ROW_INDEX").unwrap_or(String::from("0")).parse().unwrap_or(0);
 
         Ok(Config { 
-            file_path, 
+            file_path: file_path.to_string(), 
             date_column,
             description_column,
             amount_column,
