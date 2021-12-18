@@ -27,7 +27,7 @@ impl Config {
         let first_row_index: usize = env::var("EXTRACK_FIRST_ROW_INDEX").unwrap_or(String::from("0")).parse().unwrap_or(0);
 
         Ok(Config { 
-            file_path: file_path.to_string(), 
+            file_path: file_path.to_string(),
             date_column,
             description_column,
             amount_column,
