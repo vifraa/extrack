@@ -3,7 +3,7 @@ use std::collections::hash_map::Entry::{Occupied, Vacant};
 use calamine::{RangeDeserializerBuilder, Reader, Xlsx, open_workbook, DataType};
 use clap::ArgMatches;
 use serde::{Serialize, Deserialize};
-use std::env;
+use std::{env, io};
 
 pub struct Config {
     pub file_path: String,
@@ -42,8 +42,20 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let summary = calculate_summary(parsed_rows);
 
 
-    // TODO should fix the unwrap
-    println!("{}", serde_json::to_string_pretty(&summary).unwrap());
+    let mut header: Vec<&str> = Vec::new();
+    let mut row : Vec<String> = Vec::new();
+    for (key, value) in summary.category_breakdown.iter() {
+        header.push(key);
+        row.push(value.to_string());
+    }
+
+    let mut writer = csv::Writer::from_writer(io::stdout());
+    writer.write_record(header)?;
+    writer.write_record(row)?;
+    writer.flush()?;
+
+    // TODO should give option between json and csv outputs
+    //println!("{}", serde_json::to_string_pretty(&summary).unwrap());
 
     Ok(())
 }
