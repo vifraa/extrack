@@ -16,6 +16,7 @@ fn main() {
         )
         .arg(
             Arg::new("input")
+                .required(true)
         ).get_matches();
 
     let config = Config::new(&args).unwrap_or_else(|err| {
