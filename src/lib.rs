@@ -7,6 +7,7 @@ use std::{env, io};
 
 pub struct Config {
     pub file_path: String,
+    pub output_path: Option<String>,
     pub date_column: usize,
     pub description_column: usize,
     pub amount_column: usize,
@@ -18,6 +19,10 @@ impl Config {
     pub fn new(args: &ArgMatches) -> Result<Config, &str> {
         // TODO fix all of these unwraps, should handle in a good way with the Result return type.
         let file_path = args.value_of("input").unwrap();
+        let output_path = match args.value_of("output") {
+            Some(v) => Some(v.to_owned()),
+            None => None,
+        };
 
         let date_column: usize = env::var("EXTRACK_DATE_COLUMN").unwrap_or(String::from("0")).parse().unwrap_or(0);
         let description_column: usize = env::var("EXTRACK_DESCRIPTION_COLUMN").unwrap_or(String::from("1")).parse().unwrap_or(1);
@@ -28,6 +33,7 @@ impl Config {
 
         Ok(Config { 
             file_path: file_path.to_string(),
+            output_path,
             date_column,
             description_column,
             amount_column,
