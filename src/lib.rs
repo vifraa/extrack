@@ -17,8 +17,11 @@ pub struct Config {
 
 impl Config {
     pub fn new(args: &ArgMatches) -> Result<Config, &str> {
-        // TODO fix all of these unwraps, should handle in a good way with the Result return type.
-        let file_path = args.value_of("input").unwrap();
+        let file_path = match args.value_of("input") {
+            Some(input) => input,
+            None => return Err("could not find input argument")
+
+        };
         let output_path = match args.value_of("output") {
             Some(v) => Some(v.to_owned()),
             None => None,
