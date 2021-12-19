@@ -52,6 +52,7 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let mut writer = csv::Writer::from_writer(io::stdout());
     writer.write_record(header)?;
     writer.write_record(row)?;
+    writer.flush()?;
 
     // TODO should give option between json and csv outputs
     //println!("{}", serde_json::to_string_pretty(&summary).unwrap());
