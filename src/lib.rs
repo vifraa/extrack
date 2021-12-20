@@ -5,8 +5,17 @@ use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::{collections::HashMap, error::Error, vec};
 use std::{env, io};
 
+
+#[derive(Debug)]
+pub enum TimeRange {
+    Year,
+    Month,
+    Week
+}
+
 pub struct Config {
     pub file_path: String,
+    pub time_range: TimeRange,
     pub output_path: Option<String>,
     pub date_column: usize,
     pub description_column: usize,
@@ -25,6 +34,12 @@ impl Config {
         let output_path = match args.value_of("output") {
             Some(v) => Some(v.to_owned()),
             None => None,
+        };
+        let time_range = match args.value_of("timerange").unwrap() {
+            "Year" => TimeRange::Year,
+            "Month" => TimeRange::Month,
+            "Week" => TimeRange::Week,
+            _ => return Err("did not receive a valid timerange argument")
         };
 
         let date_column: usize = env::var("EXTRACK_DATE_COLUMN")
@@ -51,6 +66,7 @@ impl Config {
 
         Ok(Config {
             file_path: file_path.to_string(),
+            time_range,
             output_path,
             date_column,
             description_column,
