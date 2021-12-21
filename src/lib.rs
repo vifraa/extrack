@@ -1,7 +1,6 @@
 use calamine::{open_workbook, DataType, RangeDeserializerBuilder, Reader, Xlsx};
 use clap::ArgMatches;
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::{collections::HashMap, error::Error, vec};
 use std::{env, io};
