@@ -88,9 +88,6 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
         None => write_to_stdout(summaries)?,
     };
 
-    // TODO should give option between json and csv outputs
-    //println!("{}", serde_json::to_string_pretty(&summary).unwrap());
-
     Ok(())
 }
 
