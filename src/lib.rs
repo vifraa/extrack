@@ -80,8 +80,6 @@ impl Config {
 
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let parsed_rows = parse_workbook(&config)?;
-    // TODO split rows here into separate vectors based on date
-    // Where we calculate one summary for each splt.
     let grouped_transactions = group_transactions(&config, parsed_rows);
     let summaries = calculate_summaries(grouped_transactions);
 
