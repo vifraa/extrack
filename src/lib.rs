@@ -37,7 +37,7 @@ fn group_transactions(config: &Config, rows: Vec<Transaction>) -> HashMap<String
             TimeRange::Month => date.format("%Y-%m").to_string(),
             TimeRange::Week => date.format("%Y-%W").to_string(),
         };
-        let current = grouped.entry(map_key).or_insert(Vec::new());
+        let current = grouped.entry(map_key).or_insert_with(Vec::new);
         current.push(row);
     }
 
