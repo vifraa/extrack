@@ -15,6 +15,16 @@ fn main() {
                 .takes_value(true),
         )
         .arg(
+            Arg::new("timerange")
+                .short('t')
+                .long("timerange")
+                .possible_value("Year")
+                .possible_value("Month")
+                .possible_value("Week")
+                .default_value("Month")
+                .takes_value(true)
+        )
+        .arg(
             Arg::new("input")
                 .required(true)
         ).get_matches();
