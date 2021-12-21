@@ -2,7 +2,7 @@ use std::process;
 
 use clap::App;
 use clap::Arg;
-use extrack::Config;
+use extrack::config::Config;
 
 fn main() {
     let args = App::new("Extrack")
