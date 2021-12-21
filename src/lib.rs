@@ -57,8 +57,7 @@ fn write_to_stdout(summaries: Vec<Summary>) -> Result<(), Box<dyn Error>> {
     writer.write_record(&header)?;
 
     for summary in summaries {
-        let mut row: Vec<String> = Vec::new();
-        row.push(summary.date);
+        let mut row: Vec<String> = vec![summary.date];
 
         // Skip first one since that is the date
         for h in header.iter().skip(1) {
@@ -85,8 +84,7 @@ fn write_to_file(summaries: Vec<Summary>, file_path: &str) -> Result<(), Box<dyn
     writer.write_record(&header)?;
 
     for summary in summaries {
-        let mut row: Vec<String> = Vec::new();
-        row.push(summary.date);
+        let mut row: Vec<String> = vec![summary.date];
         // Skip first one since that is the date
         for h in header.iter().skip(1) {
             let value = summary.category_breakdown.get(h).unwrap_or(&0.0);
