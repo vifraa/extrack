@@ -1,9 +1,11 @@
 use calamine::{open_workbook, DataType, RangeDeserializerBuilder, Reader, Xlsx};
 use clap::ArgMatches;
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::{collections::HashMap, error::Error, vec};
 use std::{env, io};
+use chrono::NaiveDate;
 
 
 #[derive(Debug)]
@@ -79,11 +81,14 @@ impl Config {
 
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let parsed_rows = parse_workbook(&config)?;
-    let summary = calculate_summary(parsed_rows);
+    // TODO split rows here into separate vectors based on date
+    // Where we calculate one summary for each splt.
+    let grouped_transactions = group_transactions(&config, parsed_rows);
+    let summaries = calculate_summaries(grouped_transactions);
 
     match config.output_path {
-        Some(path) => write_to_file(summary, &path)?,
-        None => write_to_stdout(summary)?,
+        Some(path) => write_to_file(summaries, &path)?,
+        None => write_to_stdout(summaries)?,
     };
 
     // TODO should give option between json and csv outputs
@@ -92,68 +97,106 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn write_to_stdout(summary: Summary) -> Result<(), Box<dyn Error>> {
-    let mut header: Vec<&str> = Vec::new();
-    let mut row: Vec<String> = Vec::new();
-    for (key, value) in summary.category_breakdown.iter() {
-        header.push(key);
-        row.push(value.to_string());
-    }
+fn group_transactions(config: &Config, rows: Vec<Transaction>) -> HashMap<String, Vec<Transaction>> {
+    let mut grouped: HashMap<String, Vec<Transaction>> = HashMap::new();
 
-    let mut writer = csv::Writer::from_writer(io::stdout());
-    writer.write_record(header)?;
-    writer.write_record(row)?;
-    writer.flush()?;
-    Ok(())
-}
+    for row in rows {
+        // TODO should probably do something more dynamic than a hardcoded date format.
+        // Should also fix the unwrap.
+        let date = NaiveDate::parse_from_str(&row.date, "%Y-%m-%d").unwrap();
 
-fn write_to_file(summary: Summary, file_path: &str) -> Result<(), Box<dyn Error>> {
-    let mut header: Vec<&str> = Vec::new();
-    let mut row: Vec<String> = Vec::new();
-    for (key, value) in summary.category_breakdown.iter() {
-        header.push(key);
-        row.push(value.to_string());
-    }
-
-    let mut writer = csv::Writer::from_path(file_path)?;
-    writer.write_record(header)?;
-    writer.write_record(row)?;
-    writer.flush()?;
-    Ok(())
-}
-
-fn calculate_summary(transactions: Vec<Transaction>) -> Summary {
-    let mut total = 0.0;
-    let mut category_grouped: HashMap<String, f64> = HashMap::new();
-    for transaction in transactions {
-        let value = match category_grouped.entry(transaction.category) {
-            Occupied(entry) => entry.into_mut(),
-            Vacant(entry) => entry.insert(0.0),
+        let map_key = match config.time_range {
+            TimeRange::Year => date.format("%Y").to_string(),
+            TimeRange::Month => date.format("%Y-%m").to_string(),
+            TimeRange::Week => date.format("%Y-%W").to_string(),
         };
-        *value += transaction.amount;
-        total += transaction.amount;
+        let current = grouped.entry(map_key).or_insert(Vec::new());
+        current.push(row);
     }
 
-    let mut expenses = 0.0;
-    let mut income = 0.0;
-    category_grouped.iter().for_each(|f| {
-        if f.1 > &0.0 {
-            income += f.1;
-        } else {
-            expenses += f.1;
+    grouped
+}
+
+fn write_to_stdout(summaries: Vec<Summary>) -> Result<(), Box<dyn Error>> {
+    for summary in summaries {
+        let mut header: Vec<&str> = Vec::new();
+        let mut row: Vec<String> = Vec::new();
+        header.push("Date");
+        row.push(summary.date);
+        for (key, value) in summary.category_breakdown.iter() {
+            header.push(key);
+            row.push(value.to_string());
         }
-    });
 
-    Summary {
-        income,
-        expenses,
-        total,
-        category_breakdown: category_grouped,
+        let mut writer = csv::Writer::from_writer(io::stdout());
+        writer.write_record(header)?;
+        writer.write_record(row)?;
+        writer.flush()?;
     }
+    Ok(())
+}
+
+fn write_to_file(summaries: Vec<Summary>, file_path: &str) -> Result<(), Box<dyn Error>> {
+    for summary in summaries {
+        let mut header: Vec<&str> = Vec::new();
+        let mut row: Vec<String> = Vec::new();
+        header.push("Date");
+        row.push(summary.date);
+        for (key, value) in summary.category_breakdown.iter() {
+            header.push(key);
+            row.push(value.to_string());
+        }
+
+        let mut writer = csv::Writer::from_path(file_path)?;
+        writer.write_record(header)?;
+        writer.write_record(row)?;
+        writer.flush()?;
+    }
+    Ok(())
+}
+
+fn calculate_summaries(date_grouped_transactions: HashMap<String, Vec<Transaction>>) -> Vec<Summary> {
+    let mut found_summaries: Vec<Summary> = Vec::new();
+    for (date, transactions) in date_grouped_transactions.iter() {
+        let mut total = 0.0;
+        let mut category_grouped: HashMap<String, f64> = HashMap::new();
+        for transaction in transactions {
+            // TODO Creating new strings like is done below here cant be the correct way to do this.
+            // It works for now but really needs to be fixed.
+            let value = match category_grouped.entry(String::from(&transaction.category)) {
+                Occupied(entry) => entry.into_mut(),
+                Vacant(entry) => entry.insert(0.0),
+            };
+            *value += transaction.amount;
+            total += transaction.amount;
+        }
+
+        let mut expenses = 0.0;
+        let mut income = 0.0;
+        category_grouped.iter().for_each(|f| {
+            if f.1 > &0.0 {
+                income += f.1;
+            } else {
+                expenses += f.1;
+            }
+        });
+
+        found_summaries.push(
+            Summary {
+                date: date.to_string(),
+                income,
+                expenses,
+                total,
+                category_breakdown: category_grouped,
+            }
+        );
+    }
+    found_summaries
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Summary {
+    date: String,
     income: f64,
     expenses: f64,
     total: f64,
