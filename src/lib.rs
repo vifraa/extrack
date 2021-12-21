@@ -117,40 +117,57 @@ fn group_transactions(config: &Config, rows: Vec<Transaction>) -> HashMap<String
 }
 
 fn write_to_stdout(summaries: Vec<Summary>) -> Result<(), Box<dyn Error>> {
+    let mut header: Vec<String> = summaries.iter()
+        .map(|s| s.category_breakdown.keys().cloned().collect::<Vec<String>>())
+        .flatten()
+        .collect();
+    header.sort();
+    header.dedup();
+    header.insert(0, String::from("Date"));
+
+    let mut writer = csv::Writer::from_writer(io::stdout());
+    writer.write_record(&header)?;
+
     for summary in summaries {
-        let mut header: Vec<&str> = Vec::new();
         let mut row: Vec<String> = Vec::new();
-        header.push("Date");
         row.push(summary.date);
-        for (key, value) in summary.category_breakdown.iter() {
-            header.push(key);
+
+        // Skip first one since that is the date
+        for h in header.iter().skip(1) {
+            let value = summary.category_breakdown.get(h).unwrap_or(&0.0);
             row.push(value.to_string());
         }
-
-        let mut writer = csv::Writer::from_writer(io::stdout());
-        writer.write_record(header)?;
         writer.write_record(row)?;
-        writer.flush()?;
     }
+
+    writer.flush()?;
     Ok(())
 }
 
 fn write_to_file(summaries: Vec<Summary>, file_path: &str) -> Result<(), Box<dyn Error>> {
+    let mut header: Vec<String> = summaries.iter()
+        .map(|s| s.category_breakdown.keys().cloned().collect::<Vec<String>>())
+        .flatten()
+        .collect();
+    header.sort();
+    header.dedup();
+    header.insert(0, String::from("Date"));
+
+    let mut writer = csv::Writer::from_path(file_path)?;
+    writer.write_record(&header)?;
+
     for summary in summaries {
-        let mut header: Vec<&str> = Vec::new();
         let mut row: Vec<String> = Vec::new();
-        header.push("Date");
         row.push(summary.date);
-        for (key, value) in summary.category_breakdown.iter() {
-            header.push(key);
+        // Skip first one since that is the date
+        for h in header.iter().skip(1) {
+            let value = summary.category_breakdown.get(h).unwrap_or(&0.0);
             row.push(value.to_string());
         }
-
-        let mut writer = csv::Writer::from_path(file_path)?;
-        writer.write_record(header)?;
         writer.write_record(row)?;
-        writer.flush()?;
     }
+
+    writer.flush()?;
     Ok(())
 }
 
