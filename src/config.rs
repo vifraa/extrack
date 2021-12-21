@@ -27,10 +27,7 @@ impl Config {
             None => return Err("could not find input argument")
 
         };
-        let output_path = match args.value_of("output") {
-            Some(v) => Some(v.to_owned()),
-            None => None,
-        };
+        let output_path = args.value_of("output").map(|v| v.to_owned());
         let time_range = match args.value_of("timerange").unwrap() {
             "Year" => TimeRange::Year,
             "Month" => TimeRange::Month,
