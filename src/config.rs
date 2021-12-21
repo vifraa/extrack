@@ -36,24 +36,24 @@ impl Config {
         };
 
         let date_column: usize = env::var("EXTRACK_DATE_COLUMN")
-            .unwrap_or(String::from("0"))
+            .unwrap_or_else(|_| String::from("0"))
             .parse()
             .unwrap_or(0);
         let description_column: usize = env::var("EXTRACK_DESCRIPTION_COLUMN")
-            .unwrap_or(String::from("1"))
+            .unwrap_or_else(|_| String::from("1"))
             .parse()
             .unwrap_or(1);
         let amount_column: usize = env::var("EXTRACK_AMOUNT_COLUMN")
-            .unwrap_or(String::from("2"))
+            .unwrap_or_else(|_| String::from("2"))
             .parse()
             .unwrap_or(2);
         let category_column: usize = env::var("EXTRACK_CATEGORY_COLUMN")
-            .unwrap_or(String::from("3"))
+            .unwrap_or_else(|_| String::from("3"))
             .parse()
             .unwrap_or(3);
 
         let first_row_index: usize = env::var("EXTRACK_FIRST_ROW_INDEX")
-            .unwrap_or(String::from("0"))
+            .unwrap_or_else(|_| String::from("0"))
             .parse()
             .unwrap_or(0);
 
