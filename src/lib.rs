@@ -133,6 +133,7 @@ fn calculate_summaries(date_grouped_transactions: HashMap<String, Vec<Transactio
             }
         );
     }
+    found_summaries.sort_by(|a,b| a.date.cmp(&b.date));
     found_summaries
 }
 
