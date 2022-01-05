@@ -205,3 +205,68 @@ fn parse_workbook(config: &Config) -> Result<Vec<Transaction>, Box<dyn Error>> {
 
     Ok(result)
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+
+    fn mock_transactions() -> Vec<Transaction> {
+        vec![
+            Transaction{ date: String::from("2021-01-01"), description: String::from("Description"), amount: 100.0, category: String::from("Car") },
+            Transaction{ date: String::from("2021-02-01"), description: String::from("Description"), amount: -100.0, category: String::from("Rent") },
+            Transaction{ date: String::from("2021-03-01"), description: String::from("Description"), amount: 55.5, category: String::from("Rent") },
+            Transaction{ date: String::from("2021-03-01"), description: String::from("Description"), amount: -0.5, category: String::from("Groceries") }
+        ]
+    }
+
+    fn mock_config(timerange: TimeRange) -> Config {
+        Config {
+            file_path: String::from("N/A"),
+            time_range: timerange,
+            output_path: Some(String::from("N/A")),
+            date_column: 0,
+            description_column: 0,
+            amount_column: 0,
+            category_column: 0,
+            first_row_index: 0
+        }
+    }
+
+
+    #[test]
+    fn test_group_transactions_year() {
+        let transactions = mock_transactions();
+        let grouped = group_transactions(&mock_config(TimeRange::Year), transactions);
+        assert_eq!(1, grouped.len());
+        assert!(grouped.contains_key("2021"));
+        assert_eq!(4, grouped.get("2021").unwrap().len());
+    }
+
+    #[test]
+    fn test_group_transactions_month() {
+        let transactions = mock_transactions();
+        let grouped = group_transactions(&mock_config(TimeRange::Month), transactions);
+        assert_eq!(3, grouped.len());
+        assert!(grouped.contains_key("2021-01"));
+        assert!(grouped.contains_key("2021-02"));
+        assert!(grouped.contains_key("2021-03"));
+        assert_eq!(1, grouped.get("2021-01").unwrap().len());
+        assert_eq!(1, grouped.get("2021-02").unwrap().len());
+        assert_eq!(2, grouped.get("2021-03").unwrap().len());
+    }
+
+    #[test]
+    fn test_group_transactions_week() {
+        let transactions = mock_transactions();
+        let grouped = group_transactions(&mock_config(TimeRange::Week), transactions);
+        assert_eq!(3, grouped.len());
+        assert!(grouped.contains_key("2021-00"));
+        assert!(grouped.contains_key("2021-05"));
+        assert!(grouped.contains_key("2021-09"));
+        assert_eq!(1, grouped.get("2021-00").unwrap().len());
+        assert_eq!(1, grouped.get("2021-05").unwrap().len());
+        assert_eq!(2, grouped.get("2021-09").unwrap().len());
+    }
+}
